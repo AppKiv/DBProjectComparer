@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DBProjectComparer.ViewModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,7 +23,14 @@ namespace DBProjectComparer
     {
         public MainWindow()
         {
+            var p = new ProjectComparerViewModel();
+            DataContext = p;
             InitializeComponent();
+
+            /*var inOrderManager = new InOrderManager();
+            var w = new Forms.GridView.InOrderGrid { DataContext = inOrderManager };
+            w.Show();*/
+
         }
     }
 }

@@ -6,12 +6,10 @@ using System.Threading.Tasks;
 
 namespace DBProjectComparer.Model
 {
-    public class ProjectItem
+    public class ItemModel
     {
-        public int TreeObjectType { get; set; }
         public string BOObjectName { get; set; }
         public string Name { get; set; }
-        public string Title { get; set; }
-        public string BOName { get; set; }
+        public string MethodText { get; set; }
     }
 }

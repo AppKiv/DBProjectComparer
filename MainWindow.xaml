@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
         xmlns:local="clr-namespace:DBProjectComparer"
         mc:Ignorable="d"
         Title="Сравнение проекта" Height="350" MinWidth="415" Topmost="False" WindowStartupLocation="CenterOwner" Opacity="0.8" WindowStyle="ToolWindow" SizeToContent="Width" >
@@ -14,20 +15,26 @@
 
         <StackPanel  Grid.Row="0" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Top" Margin="5,5,5,1">
             <Label HorizontalContentAlignment="Right">Проект:</Label>
-            <TextBox MinWidth="250px" HorizontalContentAlignment="Left" Margin="1,0"></TextBox>
-            <Button Margin="1,0">Загрузить</Button>
+            <TextBox MinWidth="250px" Text="{Binding ProjectName, Mode=TwoWay}"  HorizontalContentAlignment="Left" Margin="1,0"></TextBox>
+            <Button Margin="1,0" Command="{Binding LoadProjectItemCmd}">Загрузить</Button>
         </StackPanel>
 
-        <ListBox Grid.Row="1" Grid.Column="0" Margin="5">
-            <StackPanel Margin="5" Orientation="Horizontal">
-                <Image Source="edit.png" Width="16"></Image>
-                <Label VerticalContentAlignment="Center" HorizontalAlignment="Left">CRMOrder.Create</Label>
-            </StackPanel>
-            <StackPanel Margin="5" Orientation="Horizontal">
-                <Image Source="new.png" Width="16"></Image>
-                <Label VerticalContentAlignment="Center" HorizontalAlignment="Left">CRMOrder.Edit</Label>
-            </StackPanel>
-        </ListBox>
+        <ListBox Grid.Row="1" Grid.Column="0" Margin="5" ItemsSource="{Binding ProjectItemList }"  SelectedItem="{Binding currItem, Mode=TwoWay}">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="MouseDoubleClick">
+                    <i:InvokeCommandAction Command="{Binding CompareItemCmd}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Margin="5" Orientation="Horizontal" >
+                        <!--Image Source="edit.png" Width="16"></-->
+                        <TextBlock Text="{Binding BOName}" HorizontalAlignment="Left" />
+
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
 
     </Grid>
 
