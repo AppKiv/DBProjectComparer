@@ -16,25 +16,56 @@ using System.Diagnostics;
 
 namespace DBProjectComparer.ViewModel
 {
-    public class ProjectComparerViewModel: INotifyPropertyChanged
+    public class ProjectComparerViewModel : INotifyPropertyChanged
     {
-        public string ProjectName { get; set; }
-        public string ErrorMessage { get; set; }
         private string UserName { get; set; }
-        public ProjectItemViewModel currItem { get; set;}
+        private ProjectModel _currProject;
+        public string ErrorMessage { get; set; }
+        public ProjectModel currProject {
+            get { return _currProject; } 
+            set
+            {
+                _currProject = value;
+                if ((_currProject != null) && (_currProject.Id > 0))
+                    ProjectItemLoad();
+            }
+        }
+        public IEnumerable<ProjectModel> ProjectList { get; set; }
+
+        public ProjectItemViewModel currItem { get; set; }
+        public IEnumerable<ProjectItemViewModel> ProjectItemList { get; set; }
 
         public ProjectComparerViewModel()
         {
-            ProjectName = "project id";
             UserName = ConfigurationManager.AppSettings["username"];
+            LoadProjectList(UserName);
         }
-        public IEnumerable<ProjectItemViewModel> ProjectItemList { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void OnPropertyChanged(string name)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+
+        public void LoadProjectList(string userName, int status = 0)
+        {
+            var conn = (SqlConnection)DatabaseConnection.GetConnectionDB1();
+            try
+            {
+                conn.Open();
+                ProjectList = conn.Query<ProjectModel>("bpBOVersionProject_TreeEnum", new { @UserName = userName, @Status = status }, commandType: CommandType.StoredProcedure);
+                OnPropertyChanged("ProjectList");
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+            finally
+            {
+                conn.Close();
+            }
+
         }
 
         public RelayCommand LoadProjectItemCmd
@@ -44,7 +75,7 @@ namespace DBProjectComparer.ViewModel
 
         private bool OnProjectItemCmdCanExecute()
         {
-            return ((ProjectName != null) && (ProjectName.Length > 0));
+            return ((currProject!=null)&&(currProject.Id > 0));
         }
 
         private void ProjectItemLoad()
@@ -53,8 +84,7 @@ namespace DBProjectComparer.ViewModel
             try
             {
                 conn.Open();
-                // todo replace ProjectName - Id
-                ProjectItemList = conn.Query<ProjectItemViewModel>("bpBOVersion_TreeEnum", new { Id = ProjectName, UserName = UserName }, commandType: CommandType.StoredProcedure);
+                ProjectItemList = conn.Query<ProjectItemViewModel>("bpBOVersion_TreeEnum", new { Id = currProject.Id, UserName = currProject?.UserName??UserName }, commandType: CommandType.StoredProcedure);
                 OnPropertyChanged("ProjectItemList");
             }
             catch (Exception ex)
@@ -66,7 +96,6 @@ namespace DBProjectComparer.ViewModel
                 conn.Close();
             }
         }
-
 
         public RelayCommand CompareItemCmd
         {
@@ -115,12 +144,6 @@ namespace DBProjectComparer.ViewModel
             var winMergePath = ConfigurationManager.AppSettings["winmergepath"];
             var winMergeArgs = ConfigurationManager.AppSettings["winmergecmd"];
             LaunchCommandLineApp(winMergePath, winMergeArgs);
-
-            /*
-            exec bpBOVersionProject_TreeEnum @UserName='user1',@Status=0
-            exec bpBOVersion_TreeEnum @Id=524,@UserName='user1'
-            EXEC bpBOMethod_GetText @BOObjectName='CRMEcInterface', @BOMethodName='ClientAddressSupplyList'
-                        */
         }
 
         private void LaunchCommandLineApp(string path, string args)
@@ -140,7 +163,9 @@ namespace DBProjectComparer.ViewModel
                 using (Process exeProcess = Process.Start(startInfo))
                 {
                     exeProcess.WaitForExit();
+                    exeProcess.Close();
                 }
+                
             }
             catch
             {

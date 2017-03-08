@@ -84,6 +84,7 @@
     </ApplicationDefinition>
     <Compile Include="DB\DatabaseConnection.cs" />
     <Compile Include="Model\ItemModel.cs" />
+    <Compile Include="Model\ProjectModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ProjectComparerViewModel.cs" />
     <Compile Include="ViewModel\ProjectItemViewModel.cs" />
