@@ -18,9 +18,10 @@ namespace DBProjectComparer.ViewModel
 {
     public class ProjectComparerViewModel : INotifyPropertyChanged
     {
-        private string UserName { get; set; }
+        private string UserName;
         private ProjectModel _currProject;
         public string ErrorMessage { get; set; }
+        public int Status { get; set; }
         public ProjectModel currProject {
             get { return _currProject; } 
             set
@@ -37,8 +38,9 @@ namespace DBProjectComparer.ViewModel
 
         public ProjectComparerViewModel()
         {
-            UserName = ConfigurationManager.AppSettings["username"];
-            LoadProjectList(UserName);
+            Status = 0;
+            SetUserName();
+            LoadProjectList();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -48,13 +50,13 @@ namespace DBProjectComparer.ViewModel
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
-        public void LoadProjectList(string userName, int status = 0)
+        public void LoadProjectList()
         {
             var conn = (SqlConnection)DatabaseConnection.GetConnectionDB1();
             try
             {
                 conn.Open();
-                ProjectList = conn.Query<ProjectModel>("bpBOVersionProject_TreeEnum", new { @UserName = userName, @Status = status }, commandType: CommandType.StoredProcedure);
+                ProjectList = conn.Query<ProjectModel>("bpBOVersionProject_TreeEnum", new { @UserName = UserName, @Status = Status }, commandType: CommandType.StoredProcedure);
                 OnPropertyChanged("ProjectList");
             }
             catch (Exception ex)
@@ -67,7 +69,14 @@ namespace DBProjectComparer.ViewModel
             }
 
         }
-
+        public RelayCommand RefreshProjectListCmd
+        {
+            get { return new RelayCommand(LoadProjectList, OnRefreshProjectListCmdCanExecute); }
+        }
+        public bool OnRefreshProjectListCmdCanExecute()
+        {
+            return ((UserName.Length>0) && ((Status == 0) || (Status == 1)));
+        }
         public RelayCommand LoadProjectItemCmd
         {
             get { return new RelayCommand(ProjectItemLoad, OnProjectItemCmdCanExecute); }
@@ -76,6 +85,26 @@ namespace DBProjectComparer.ViewModel
         private bool OnProjectItemCmdCanExecute()
         {
             return ((currProject!=null)&&(currProject.Id > 0));
+        }
+
+        private void SetUserName()
+        {
+            UserName = ConfigurationManager.AppSettings["username"];
+            var conn = (SqlConnection)DatabaseConnection.GetConnectionDB1();
+            try
+            {
+                conn.Open();
+                UserName = conn.ExecuteScalar("select suser_sname()").ToString();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+            finally
+            {
+                conn.Close();
+            }
+
         }
 
         private void ProjectItemLoad()
