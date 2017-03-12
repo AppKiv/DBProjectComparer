@@ -6,7 +6,7 @@
         xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
         xmlns:local="clr-namespace:DBProjectComparer"
         mc:Ignorable="d"
-        Title="Сравнение проектов" Height="650" MinWidth="415" Topmost="False" WindowStartupLocation="CenterOwner" Opacity="0.8" SizeToContent="Width" >
+        Title="Сравнение проектов" Height="650" MinWidth="445" Topmost="False" WindowStartupLocation="CenterOwner" Opacity="0.8" SizeToContent="Width" >
     <Window.InputBindings>
         <KeyBinding Key="F5" Command="{Binding RefreshProjectListCmd}"/>
     </Window.InputBindings>
@@ -14,20 +14,28 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition MinHeight="20" MaxHeight="35"></RowDefinition>
+            <RowDefinition MinHeight="20" MaxHeight="35"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
 
-        <StackPanel  Grid.Row="0" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Top" Margin="5,5,5,1">
-            <CheckBox VerticalAlignment="Center" IsChecked="{Binding Status}" Margin="2,0">Finished/Active </CheckBox>
-            <!--Label HorizontalContentAlignment="Right" VerticalAlignment="Center" VerticalContentAlignment="Center" Margin="2,0">Проект:</-->
-            <ComboBox Name="cbxProject" MinWidth="270px" Margin="1,0"
+        <StackPanel Name="pLogin" Grid.Row="0" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Top" Margin="5,5,5,1">
+            <Label HorizontalContentAlignment="Right" VerticalAlignment="Center" VerticalContentAlignment="Center" Margin="2,0">Логин:</Label>
+            <TextBox HorizontalContentAlignment="Left" VerticalAlignment="Center" VerticalContentAlignment="Center" Margin="2,0"
+                    Text="{Binding UserName}" MinWidth="270" HorizontalAlignment="Left"
+                     />
+
+        </StackPanel>
+
+        <StackPanel  Grid.Row="1" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Top" Margin="5,5,5,1">
+            <CheckBox VerticalAlignment="Center" VerticalContentAlignment="Center" IsChecked="{Binding Status}" Margin="1,0">Finished/Active </CheckBox>
+            <ComboBox Name="cbxProject" MinWidth="270px" Margin="1,0" VerticalAlignment="Center" VerticalContentAlignment="Center"
                 ItemsSource="{Binding ProjectList}" DisplayMemberPath = "Title"
                 SelectedItem="{Binding currProject}"
                 IsSynchronizedWithCurrentItem="True"/>
             <Button Margin="1,0" Command="{Binding RefreshProjectListCmd}"  IsDefault="True" ToolTip="Обновить - F5" >F5</Button>
         </StackPanel>
 
-        <ListBox Grid.Row="1" Grid.Column="0" Margin="5" ItemsSource="{Binding ProjectItemList }"  SelectedItem="{Binding currItem, Mode=TwoWay}">
+        <ListBox Grid.Row="2" Grid.Column="0" Margin="5" ItemsSource="{Binding ProjectItemList }"  SelectedItem="{Binding currItem, Mode=TwoWay}">
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="MouseDoubleClick">
                     <i:InvokeCommandAction Command="{Binding CompareItemCmd}"/>

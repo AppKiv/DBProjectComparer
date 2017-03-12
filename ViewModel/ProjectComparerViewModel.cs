@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Command;
 using System.ComponentModel;
 using DBProjectComparer.DB;
@@ -18,10 +16,15 @@ namespace DBProjectComparer.ViewModel
 {
     public class ProjectComparerViewModel : INotifyPropertyChanged
     {
-        private string UserName;
+        private string _userName;
         private ProjectModel _currProject;
         public string ErrorMessage { get; set; }
         public int Status { get; set; }
+        public string UserName {
+            get { return _userName; }
+            set { _userName = value; }
+        }
+
         public ProjectModel currProject {
             get { return _currProject; } 
             set
@@ -56,7 +59,7 @@ namespace DBProjectComparer.ViewModel
             try
             {
                 conn.Open();
-                ProjectList = conn.Query<ProjectModel>("bpBOVersionProject_TreeEnum", new { @UserName = UserName, @Status = Status }, commandType: CommandType.StoredProcedure);
+                ProjectList = conn.Query<ProjectModel>("bpBOVersionProject_TreeEnum", new { @UserName = _userName, @Status = Status }, commandType: CommandType.StoredProcedure);
                 OnPropertyChanged("ProjectList");
             }
             catch (Exception ex)
@@ -67,7 +70,6 @@ namespace DBProjectComparer.ViewModel
             {
                 conn.Close();
             }
-
         }
         public RelayCommand RefreshProjectListCmd
         {
@@ -75,7 +77,7 @@ namespace DBProjectComparer.ViewModel
         }
         public bool OnRefreshProjectListCmdCanExecute()
         {
-            return ((UserName.Length>0) && ((Status == 0) || (Status == 1)));
+            return ((_userName.Length>0) && ((Status == 0) || (Status == 1)));
         }
         public RelayCommand LoadProjectItemCmd
         {
@@ -89,12 +91,12 @@ namespace DBProjectComparer.ViewModel
 
         private void SetUserName()
         {
-            UserName = ConfigurationManager.AppSettings["username"];
             var conn = (SqlConnection)DatabaseConnection.GetConnectionDB1();
             try
             {
                 conn.Open();
-                UserName = conn.ExecuteScalar("select suser_sname()").ToString();
+                _userName = conn.ExecuteScalar("select suser_sname()").ToString();
+                OnPropertyChanged("UserName");
             }
             catch (Exception ex)
             {
@@ -104,7 +106,6 @@ namespace DBProjectComparer.ViewModel
             {
                 conn.Close();
             }
-
         }
 
         private void ProjectItemLoad()
@@ -113,7 +114,7 @@ namespace DBProjectComparer.ViewModel
             try
             {
                 conn.Open();
-                ProjectItemList = conn.Query<ProjectItemViewModel>("bpBOVersion_TreeEnum", new { Id = currProject.Id, UserName = currProject?.UserName??UserName }, commandType: CommandType.StoredProcedure);
+                ProjectItemList = conn.Query<ProjectItemViewModel>("bpBOVersion_TreeEnum", new { Id = currProject.Id, UserName = currProject?.UserName??_userName }, commandType: CommandType.StoredProcedure);
                 OnPropertyChanged("ProjectItemList");
             }
             catch (Exception ex)
@@ -143,6 +144,9 @@ namespace DBProjectComparer.ViewModel
             var item2 = new ItemModel();
             var conn1 = (SqlConnection)DatabaseConnection.GetConnectionDB1();
             var conn2 = (SqlConnection)DatabaseConnection.GetConnectionDB2();
+            var obj1Name = conn1.DataSource.ToString()+"__"+currItem.BOObjectName+"."+ currItem.Name;
+            var obj2Name = conn2.DataSource.ToString() + "__" +currItem.BOObjectName+"."+ currItem.Name;
+
             try
             {
                 conn1.Open();
@@ -160,7 +164,6 @@ namespace DBProjectComparer.ViewModel
                 conn1.Close();
                 conn2.Close();
             }
-
             
             string baseDir = Directory.GetCurrentDirectory(); //System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var text = "";
@@ -172,12 +175,13 @@ namespace DBProjectComparer.ViewModel
 
             var winMergePath = ConfigurationManager.AppSettings["winmergepath"];
             var winMergeArgs = ConfigurationManager.AppSettings["winmergecmd"];
+            winMergeArgs = winMergeArgs.Replace("%file1name", obj1Name);
+            winMergeArgs = winMergeArgs.Replace("%file2name", obj2Name);
             LaunchCommandLineApp(winMergePath, winMergeArgs);
         }
 
         private void LaunchCommandLineApp(string path, string args)
         {
-            // Use ProcessStartInfo class
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.CreateNoWindow = false;
             startInfo.UseShellExecute = false;
@@ -187,8 +191,6 @@ namespace DBProjectComparer.ViewModel
 
             try
             {
-                // Start the process with the info we specified.
-                // Call WaitForExit and then the using statement will close.
                 using (Process exeProcess = Process.Start(startInfo))
                 {
                     exeProcess.WaitForExit();
